@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Inter } from "next/font/google";
 import Link from "next/link";
 
@@ -11,7 +10,10 @@ export default function Home() {
     >
       <ol>
         <li>
-          <Link href={"/example/drag-the-target-to-the-target-area"}>Drag the target to the target area</Link>
+          <Link href={"/example/drag-the-target-to-the-target-area"}>- Drag the target to the target area</Link>
+        </li>
+        <li>
+          <Link href={"/example/drag-the-target-to-the-target-area/with-animation"}>- Drag the target to the target area with animation</Link>
         </li>
       </ol>
     </main>
