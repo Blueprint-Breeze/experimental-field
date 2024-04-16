@@ -1,63 +1,86 @@
-import React, { useState } from "react";
+import React, { Reducer, useReducer } from "react";
 import { DndProvider, useDrop, useDrag } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Cross2Icon } from "@radix-ui/react-icons";
+import clsx from "clsx";
 
-interface DraggableProps {
-  disableDrag?: boolean;
-  clearable?: boolean;
-  onClear?: () => void;
-}
-
-const Draggable: React.FC<DraggableProps> = (props) => {
-  const { disableDrag = false, clearable = false, onClear = () => {} } = props;
+const Draggable: React.FC = () => {
   const [, drag] = useDrag(() => ({
     type: "draggable",
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
   }));
+
   return (
     <div
       className="w-[300px] h-[300px] bg-white shadow-lg rounded-lg cursor-pointer"
       ref={(node) => {
-        if (!disableDrag) {
-          drag(node);
-        }
+        drag(node);
       }}
-    >
-      {clearable && (
-        <div className="w-full h-full flex items-center justify-center text-[80px]">
-          <Cross2Icon onClick={() => onClear()} width={"1em"} height={"1em"} />
-        </div>
-      )}
-    </div>
+    ></div>
   );
 };
 
-const Droppable: React.FC = () => {
-  const [isDropped, setIsDropped] = useState(false);
+interface DroppableProps {
+  id: string;
+  element: {
+    seatId: string;
+  };
+  onDrop?: () => void;
+}
+
+const Droppable: React.FC<DroppableProps> = (props) => {
+  const { id, element, onDrop = () => {} } = props;
+  const isDropped = element.seatId === id;
   const [, drop] = useDrop(() => ({
     accept: "draggable",
-    drop: () => setIsDropped(true),
+    drop: onDrop,
   }));
 
   return (
     <div
-      className="w-[300px] h-[300px] box-content p-2 border-dashed border-4 border-gray-400 rounded-lg"
+      className={clsx(
+        `w-[300px]`,
+        `h-[300px]`,
+        `box-content`,
+        `p-2`,
+        `border-dashed`,
+        `border-4`,
+        isDropped && `border-gray-400`,
+        `rounded-lg`
+      )}
       ref={(node) => {
         drop(node);
       }}
     >
-      {isDropped ? <Draggable disableDrag clearable onClear={() => setIsDropped(false)} /> : null}
+      {id === element.seatId ? <Draggable /> : null}
     </div>
   );
 };
 
 const Page: React.FC = () => {
+  const [state, dispatch] = useReducer<Reducer<{ seatId: string }, { type: string }>>(
+    (state, action) => {
+      switch (action.type) {
+        case "to-left":
+          return { seatId: "left" };
+        case "to-right":
+          return { seatId: "right" };
+        default:
+          return state;
+      }
+    },
+    { seatId: "left" }
+  );
+
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="p-36 flex h-full w-full items-center justify-between">
-        <Draggable />
-        <div className="text-[3.23rem] text-nowrap">---&gt;</div>
-        <Droppable />
+        <Droppable id="left" element={state} onDrop={() => dispatch({ type: "to-left" })} />
+        <div className="text-[3.23rem] text-nowrap">
+          {state.seatId === "right" && "<"}---{state.seatId === "left" && ">"}
+        </div>
+        <Droppable id="right" element={state} onDrop={() => dispatch({ type: "to-right" })} />
       </div>
     </DndProvider>
   );
