@@ -9,7 +9,7 @@ body {
 
 body {
   color: rgb(0, 0, 0);
-  background: linear-gradient(to bottom, transparent, rgb(255, 255, 255)) rgb(212, 235, 240);
+  background: linear-gradient(to bottom, transparent, rgb(235, 232, 233)) rgb(195, 220, 251);
 }
 
 @layer utilities {
