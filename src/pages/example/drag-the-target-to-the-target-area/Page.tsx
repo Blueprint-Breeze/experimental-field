@@ -1,99 +1,65 @@
-import React, { HTMLAttributes, Reducer, useReducer } from "react";
-import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
-import clsx from "clsx";
+import React, { useState } from "react";
+import { DndProvider, useDrop, useDrag } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { Cross2Icon } from "@radix-ui/react-icons";
 
-const Box = React.forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(function Box(props, ref) {
-  const { className, children, ...otherProps } = props;
+interface DraggableProps {
+  disableDrag?: boolean;
+  clearable?: boolean;
+  onClear?: () => void;
+}
 
+const Draggable: React.FC<DraggableProps> = (props) => {
+  const { disableDrag = false, clearable = false, onClear = () => {} } = props;
+  const [, drag] = useDrag(() => ({
+    type: "draggable",
+  }));
   return (
-    <div ref={ref} className={clsx("w-[300px]", "h-[300px]", "bg-white", "rounded-lg", className)} {...otherProps}>
-      {children}
-    </div>
-  );
-});
-
-const Draggable: React.FC = () => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: "draggable",
-  });
-
-  return (
-    <Box
-      className={clsx("transition-opacity", isDragging ? "shadow-lg" : "shadow-2xl")}
-      style={{
-        transform: CSS.Transform.toString(transform),
+    <div
+      className="w-[300px] h-[300px] bg-white shadow-lg rounded-lg cursor-pointer"
+      ref={(node) => {
+        if (!disableDrag) {
+          drag(node);
+        }
       }}
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-    />
+    >
+      {clearable && (
+        <div className="w-full h-full flex items-center justify-center text-[80px]">
+          <Cross2Icon onClick={() => onClear()} width={"1em"} height={"1em"} />
+        </div>
+      )}
+    </div>
   );
 };
 
-interface DroppableProps {
-  id: string;
-  onDrop?: () => void;
-  element: {
-    seatId: string;
-  };
-}
-
-const Droppable: React.FC<DroppableProps> = (props) => {
-  const { id, element } = props;
-  const isDropped = element.seatId === id;
-  const { setNodeRef } = useDroppable({
-    id,
-  });
+const Droppable: React.FC = () => {
+  const [isDropped, setIsDropped] = useState(false);
+  const [, drop] = useDrop(() => ({
+    accept: "draggable",
+    drop: () => setIsDropped(true),
+  }));
 
   return (
     <div
-      className={clsx(
-        "w-[300px]",
-        "h-[300px]",
-        "box-content",
-        "p-2",
-        "border-dashed",
-        "border-4",
-        !isDropped && "border-gray-400",
-        "rounded-lg"
-      )}
-      ref={setNodeRef}
+      className="w-[300px] h-[300px] box-content p-2 border-dashed border-4 border-gray-400 rounded-lg"
+      ref={(node) => {
+        drop(node);
+      }}
     >
-      {id === element.seatId ? <Draggable /> : null}
+      {isDropped ? <Draggable disableDrag clearable onClear={() => setIsDropped(false)} /> : null}
     </div>
   );
 };
 
 const Page: React.FC = () => {
-  const [state, dispatch] = useReducer<Reducer<{ seatId: string }, { type: string }>>(
-    (state, action) => {
-      switch (action.type) {
-        case "to-left":
-          return { seatId: "left" };
-        case "to-right":
-          return { seatId: "right" };
-        default:
-          return state;
-      }
-    },
-    { seatId: "left" }
-  );
-
   return (
-    <DndContext
-      onDragEnd={(event) => {
-        event.over?.id && dispatch({ type: `to-${event.over.id}` });
-      }}
-    >
+    <DndProvider backend={HTML5Backend}>
       <div className="p-36 flex h-full w-full items-center justify-between">
-        <Droppable id="left" element={state} onDrop={() => dispatch({ type: "to-left" })} />
-        <div className="text-[3.23rem] text-nowrap">
-          {state.seatId === "right" && "<"}---{state.seatId === "left" && ">"}
-        </div>
-        <Droppable id="right" element={state} onDrop={() => dispatch({ type: "to-right" })} />
+        <Draggable />
+        <div className="text-[3.23rem] text-nowrap">---&gt;</div>
+        <Droppable />
       </div>
-    </DndContext>
+    </DndProvider>
   );
 };
 
