@@ -23,10 +23,10 @@ const Draggable: React.FC = () => {
 
 interface DroppableProps {
   id: string;
+  onDrop?: () => void;
   element: {
     seatId: string;
   };
-  onDrop?: () => void;
 }
 
 const Droppable: React.FC<DroppableProps> = (props) => {
