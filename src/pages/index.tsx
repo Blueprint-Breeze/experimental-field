@@ -12,9 +12,6 @@ export default function Home() {
         <li>
           <Link href={"/example/drag-the-target-to-the-target-area"}>- Drag the target to the target area</Link>
         </li>
-        <li>
-          <Link href={"/example/drag-the-target-to-the-target-area/with-animation"}>- Drag the target to the target area with animation</Link>
-        </li>
       </ol>
     </main>
   );
